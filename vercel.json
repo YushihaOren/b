@@ -1,1 +1,6 @@
-
+{
+  "rewrites": [
+    { "source": "/check", "destination": "/api/check" },
+    { "source": "/list", "destination": "/api/list" }
+  ]
+}
