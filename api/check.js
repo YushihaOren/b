@@ -1,39 +1,36 @@
 const { MongoClient } = require('mongodb');
 
-const MONGODB_URI = "mongodb+srv://thanhduykady60_db_user:zmatrixlo2026@cluster0.noqdlnn.mongodb.net/?appName=Cluster0";
-const mongoClient = new MongoClient(MONGODB_URI);
+const MONGODB_URI = 'mongodb+srv://thanhduykady60_db_user:zmatrixlo2026@cluster0.noqdlnn.mongodb.net/?retryWrites=true&w=majority';
+const client = new MongoClient(MONGODB_URI);
 
 export default async function handler(req, res) {
     const { uid, hwid } = req.query;
     res.setHeader('Content-Type', 'text/plain; charset=utf-8');
 
-    if (!uid || !hwid) return res.status(400).send('warn("❌ Thiếu UID hoặc HWID!")');
+    if (!uid || !hwid) return res.status(200).send('warn("❌ Thieu tham so UID/HWID!")');
 
     try {
-        await mongoClient.connect();
-        const db = mongoClient.db('ZMatrixDB');
-        const users = db.collection('users');
+        await client.connect();
+        const db = client.db('ZMatrixDB');
+        const user = await db.collection('users').findOne({ uid: uid });
 
-        const user = await users.findOne({ uid: uid });
+        if (!user) return res.status(200).send('warn("❌ Ban chua co Whitelist!")');
 
-        if (!user) return res.send('warn("❌ Bạn chưa có Whitelist!")');
-
-        // Tự động khóa HWID nếu chưa có
-        if (!user.hwid) {
-            await users.updateOne({ uid: uid }, { $set: { hwid: hwid } });
-            return res.send(`print("✅ Đã tự động khóa máy!")\n${getMainScript()}`);
-        }
-
-        if (user.hwid === hwid) {
-            return res.send(getMainScript());
+        if (!user.hwid || user.hwid === hwid) {
+            if (!user.hwid) await db.collection('users').updateOne({ uid: uid }, { $set: { hwid: hwid } });
+            
+            return res.status(200).send(`
+                print("✅ [Z-Matrix] Chao mung ${uid}!")
+                -- Paste Script Lua chinh cua ban vao day
+                local hint = Instance.new("Hint", game.Workspace)
+                hint.Text = "Z-Matrix Loaded!"
+                task.wait(2)
+                hint:Destroy()
+            `);
         } else {
-            return res.send('warn("❌ Sai HWID! Hãy Reset trên Discord.")');
+            return res.status(200).send('warn("❌ Sai mã máy (HWID)! Vui lòng Reset trên Discord.")');
         }
     } catch (e) {
-        res.send('warn("❌ Lỗi Server: ' + e.message + '")');
+        return res.status(200).send('warn("❌ Server Error: ' + e.message + '")');
     }
-}
-
-function getMainScript() {
-    return `print("🚀 Z-Matrix Script Loaded!")`;
 }
