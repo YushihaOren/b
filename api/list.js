@@ -1,6 +1,6 @@
 const { MongoClient } = require('mongodb');
 
-const MONGODB_URI = "mongodb+srv://thanhduykady60_db_user:<db_password>@cluster0.noqdlnn.mongodb.net/?appName=Cluster0";
+const MONGODB_URI = "mongodb+srv://thanhduykady60_db_user:5%Z%KEdavP#P-%g@cluster0.noqdlnn.mongodb.net/?appName=Cluster0";
 const mongoClient = new MongoClient(MONGODB_URI);
 
 export default async function handler(req, res) {
